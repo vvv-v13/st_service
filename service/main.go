@@ -37,7 +37,7 @@ func main() {
 	}()
 
 	// Social Tournament Service
-	service := Service{DB: db}
+	service := Service{db: db}
 	service.Initialize()
 
 	service.Take("P6", 200)
@@ -48,6 +48,7 @@ func main() {
 	service.Fund("P5", 1000)
 
 	service.AnnounceTournament(1, 1000)
+
 	service.JoinTournament(1, "P1", []string{"P2", "P3"})
 	service.JoinTournament(1, "P5", []string{})
 	service.ResultTournament("HZ")
@@ -72,7 +73,7 @@ func main() {
 	)
 
 	// API endpoints
-	router.Get(`/`, func(c *routing.Context) error { return view(c) })
+	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournament(c, service) })
 
 	// Http server
 	server := &http.Server{
@@ -90,8 +91,4 @@ func main() {
 	log.Println("Server listen on 8080")
 	panic(server.ListenAndServe())
 
-}
-
-func view(c *routing.Context) error {
-	return c.Write(map[string]string{"result": "ok"})
 }
