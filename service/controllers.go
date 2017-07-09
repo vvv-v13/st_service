@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func announceTournament(c *routing.Context, service Service) error {
+func announceTournamentController(c *routing.Context, service Service) error {
 	id := c.Query("tournamentId")
 	d := c.Query("deposit")
 
@@ -35,6 +35,16 @@ func announceTournament(c *routing.Context, service Service) error {
 	err = service.AnnounceTournament(tournament, deposit)
 	if err != nil {
 		log.Println("AnnounceTournament:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.Write(map[string]string{})
+}
+
+func resetDBController(c *routing.Context, service Service) error {
+	err := service.ResetDB()
+	if err != nil {
+		log.Println("ResetDB:", err)
 		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 

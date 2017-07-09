@@ -59,7 +59,7 @@ func main() {
 	service.Balance("P4")
 	service.Balance("P5")
 
-	service.Reset()
+	service.ResetDB()
 
 	// Ozzo-router
 	router := routing.New()
@@ -73,7 +73,8 @@ func main() {
 	)
 
 	// API endpoints
-	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournament(c, service) })
+	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournamentController(c, service) })
+	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
 
 	// Http server
 	server := &http.Server{

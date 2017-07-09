@@ -16,9 +16,20 @@ func (service *Service) Initialize() error {
 	return nil
 }
 
-func (service *Service) Reset() error {
+const truncateSQL = `
+	TRUNCATE games;
+	TRUNCATE tournaments;
+	TRUNCATE players;
+`
+
+func (service *Service) ResetDB() error {
+
 	log.Println("Reset DB")
-	return nil
+
+	q := service.db.NewQuery(truncateSQL)
+	_, err := q.Execute()
+
+	return err
 }
 
 func (service *Service) CreatePlayersTable() error {
