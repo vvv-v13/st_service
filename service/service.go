@@ -150,6 +150,6 @@ type Players struct {
 
 func (service *Service) PlayerBalance(id string) (Players, error) {
 	var player Players
-	service.db.Select().Model(id, &player)
-	return player, nil
+	err := service.db.Select().Model(id, &player)
+	return player, err
 }

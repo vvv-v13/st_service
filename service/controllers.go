@@ -60,8 +60,13 @@ func playerBalanceController(c *routing.Context, service Service) error {
 
 	player, err := service.PlayerBalance(id)
 	if err != nil {
-		log.Println("ResetDB:", err)
-		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
+		e := err.Error()
+		if e == "sql: no rows in result set" {
+			return routing.NewHTTPError(http.StatusNotFound, "not found")
+		}
+
+		log.Println("PlayerBalanceDB:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, e)
 	}
 
 	return c.Write(player)
