@@ -1,0 +1,29 @@
+version: "2.1"
+services:
+
+    sql-db:
+        restart: "always"
+        image: sameersbn/postgresql:9.6-2
+        healthcheck: { test: "psql --username user --list" }
+        logging: { driver: none }
+        environment:
+            - DB_NAME=app
+            - DB_USER=user
+            - DB_PASS=pass
+        ports:
+            - "5432:5432"
+
+    app:
+        build: ./service
+        depends_on:
+            sql-db: { condition: service_healthy }
+        links: 
+            - sql-db
+        environment:
+            - SQL_DB=user=user dbname=app sslmode=disable port=5432 host=sql-db password=pass
+        working_dir: /go/src/app
+        command: go run main.go service.go
+        volumes:
+            - ./service:/go/src/app
+        ports:
+            - "8080:8080"
