@@ -50,3 +50,19 @@ func resetDBController(c *routing.Context, service Service) error {
 
 	return c.Write(map[string]string{})
 }
+
+func playerBalanceController(c *routing.Context, service Service) error {
+	id := c.Query("playerId")
+
+	if id == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "playerId is requred")
+	}
+
+	player, err := service.PlayerBalance(id)
+	if err != nil {
+		log.Println("ResetDB:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.Write(player)
+}

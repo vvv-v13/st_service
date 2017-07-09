@@ -93,18 +93,17 @@ const fundSQL = `
 `
 
 func (service *Service) Fund(player string, points int64) error {
-	log.Println("Fund:", player, points)
-
-        q := service.db.NewQuery(fundSQL)
+	q := service.db.NewQuery(fundSQL)
 	q.Bind(dbx.Params{
-		"id": player,
+		"id":     player,
 		"points": points,
 	})
 
-        _, err := q.Execute()
-        if err != nil {
-                log.Println("DB:", err)
-        }
+	_, err := q.Execute()
+	if err != nil {
+		log.Println("DB:", err)
+	}
+
 	return err
 }
 
@@ -120,8 +119,6 @@ type Tournaments struct {
 }
 
 func (service *Service) AnnounceTournament(id int64, deposit int64) error {
-	log.Println("AnnounceTournament:", id, deposit)
-
 	tournament := Tournaments{
 		ID:       id,
 		Deposit:  deposit,
@@ -146,7 +143,13 @@ func (service *Service) ResultTournament(result string) error {
 	return nil
 }
 
-func (service *Service) Balance(player string) (int64, error) {
-	log.Println("Balance:", player)
-	return 0, nil
+type Players struct {
+	ID      string `db:"id" json:"playerId,omitempty"`
+	Balance int64  `db:"balance" json:"balance,omitempty"`
+}
+
+func (service *Service) PlayerBalance(id string) (Players, error) {
+	var player Players
+	service.db.Select().Model(id, &player)
+	return player, nil
 }

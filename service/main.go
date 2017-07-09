@@ -54,11 +54,11 @@ func main() {
 	service.JoinTournament(1, "P5", []string{})
 	service.ResultTournament("HZ")
 
-	service.Balance("P1")
-	service.Balance("P2")
-	service.Balance("P3")
-	service.Balance("P4")
-	service.Balance("P5")
+	service.PlayerBalance("P1")
+	service.PlayerBalance("P2")
+	service.PlayerBalance("P3")
+	service.PlayerBalance("P4")
+	service.PlayerBalance("P5")
 
 	//service.ResetDB()
 
@@ -75,6 +75,7 @@ func main() {
 
 	// API endpoints
 	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournamentController(c, service) })
+	router.Get(`/balance`, func(c *routing.Context) error { return playerBalanceController(c, service) })
 	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
 
 	// Http server
