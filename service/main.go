@@ -42,6 +42,7 @@ func main() {
 
 	service.Take("P6", 200)
 	service.Fund("P1", 300)
+	service.Fund("P1", 333)
 	service.Fund("P2", 300)
 	service.Fund("P3", 300)
 	service.Fund("P4", 500)
@@ -59,7 +60,7 @@ func main() {
 	service.Balance("P4")
 	service.Balance("P5")
 
-	service.ResetDB()
+	//service.ResetDB()
 
 	// Ozzo-router
 	router := routing.New()

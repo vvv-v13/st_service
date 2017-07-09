@@ -80,9 +80,32 @@ func (service *Service) CreateTournamentsTables() error {
 	return err
 }
 
+const fundSQL = `
+	INSERT INTO players
+    		(id, balance)
+	VALUES
+    		({:id}, {:points})
+	ON
+ 		CONFLICT (id)
+	DO UPDATE SET
+    		balance = players.balance + {:points}
+                
+`
+
 func (service *Service) Fund(player string, points int64) error {
 	log.Println("Fund:", player, points)
-	return nil
+
+        q := service.db.NewQuery(fundSQL)
+	q.Bind(dbx.Params{
+		"id": player,
+		"points": points,
+	})
+
+        _, err := q.Execute()
+        if err != nil {
+                log.Println("DB:", err)
+        }
+	return err
 }
 
 func (service *Service) Take(player string, points int64) error {
