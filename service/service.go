@@ -51,6 +51,9 @@ func (service *Service) CreatePlayersTable() error {
 	return err
 }
 
+const gamesIndexesSQL = `
+    CREATE UNIQUE INDEX ON games USING btree(tournament_id, player_id)
+`
 func (service *Service) CreateTournamentsTables() error {
 	log.Println("Create tournaments tables")
 
@@ -77,7 +80,13 @@ func (service *Service) CreateTournamentsTables() error {
 	if err != nil {
 		log.Println("DB:", err)
 		//return err
-	}
+	} else {
+            q = service.db.NewQuery(gamesIndexesSQL)
+            _, err := q.Execute()
+            if err != nil {
+                log.Println("DB:", err)
+            }
+        }
 
 	return err
 }
