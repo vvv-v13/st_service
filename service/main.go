@@ -76,6 +76,7 @@ func main() {
 	// API endpoints
 	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournamentController(c, service) })
 	router.Get(`/balance`, func(c *routing.Context) error { return playerBalanceController(c, service) })
+	router.Get(`/fund`, func(c *routing.Context) error { return fundController(c, service) })
 	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
 
 	// Http server
