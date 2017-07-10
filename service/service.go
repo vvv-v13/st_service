@@ -231,8 +231,8 @@ func (service *Service) ResultTournament(result string) error {
 }
 
 type Players struct {
-	ID      string `db:"id" json:"playerId,omitempty"`
-	Balance int64  `db:"balance" json:"balance,omitempty"`
+	ID      string `db:"id" json:"playerId"`
+	Balance int64  `db:"balance" json:"balance"`
 }
 
 func (service *Service) PlayerBalance(id string) (Players, error) {

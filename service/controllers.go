@@ -142,7 +142,6 @@ func takeController(c *routing.Context, service Service) error {
 
 func joinTournamentController(c *routing.Context, service Service) error {
 	backers := c.Request.URL.Query()["backerId"]
-	log.Println("aaa", backers)
 	playerId := c.Query("playerId")
 	id := c.Query("tournamentId")
 
