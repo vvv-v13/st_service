@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"github.com/go-ozzo/ozzo-dbx"
+	"github.com/lib/pq"
 	"log"
 )
 
@@ -68,7 +70,7 @@ func (service *Service) CreateTournamentsTables() error {
 		"id":            "bigserial",
 		"tournament_id": "bigint",
 		"player_id":     "text",
-		"backer":        "text[]",
+		"backers":       "text[]",
 	})
 
 	_, err = q.Execute()
@@ -154,8 +156,63 @@ func (service *Service) AnnounceTournament(id int64, deposit int64) error {
 	return err
 }
 
-func (service *Service) JoinTournament(tournament int64, player string, backers []string) error {
-	log.Println("JoinTournament:", tournament, player, backers)
+func (service *Service) JoinTournament(id int64, player string, backers []string) error {
+	log.Println("JoinTournament:", id, player, backers)
+
+	var tournament Tournaments
+
+	service.db.Select("id", "deposit", "finished").
+		From("tournaments").
+		Where(dbx.HashExp{"id": id, "finished": false}).
+		One(&tournament)
+
+	if tournament == (Tournaments{}) {
+		return errors.New("not found")
+	}
+
+	var points int64
+	backersLen := len(backers)
+	points = tournament.Deposit / (1 + int64(backersLen))
+
+	tx, _ := service.db.Begin()
+
+	_, err := tx.Insert("games", dbx.Params{
+		"tournament_id": id,
+		"player_id":     player,
+		"backers":       pq.Array(backers),
+	}).Execute()
+
+	if err != nil {
+		log.Println("vvv:", err)
+		tx.Rollback()
+		return err
+	}
+
+	backers = append(backers, player)
+
+	for _, p := range backers {
+		q := tx.NewQuery(takeSQL)
+		q.Bind(dbx.Params{
+			"id":     p,
+			"points": points,
+		})
+
+		result, err := q.Execute()
+		if err != nil {
+			log.Println("DB:", err)
+			tx.Rollback()
+			return err
+		}
+
+		r, err := result.RowsAffected()
+		if r == 0 {
+			tx.Rollback()
+			return errors.New("not found")
+		}
+	}
+
+	tx.Commit()
+
 	return nil
 }
 

@@ -40,9 +40,7 @@ func main() {
 	service := Service{db: db}
 	service.Initialize()
 
-	service.Take("P6", 200)
 	service.Fund("P1", 300)
-	service.Fund("P1", 333)
 	service.Fund("P2", 300)
 	service.Fund("P3", 300)
 	service.Fund("P4", 500)
@@ -50,17 +48,9 @@ func main() {
 
 	service.AnnounceTournament(1, 1000)
 
-	service.JoinTournament(1, "P1", []string{"P2", "P3"})
+	service.JoinTournament(1, "P1", []string{"P2", "P3", "P4"})
 	service.JoinTournament(1, "P5", []string{})
 	service.ResultTournament("HZ")
-
-	service.PlayerBalance("P1")
-	service.PlayerBalance("P2")
-	service.PlayerBalance("P3")
-	service.PlayerBalance("P4")
-	service.PlayerBalance("P5")
-
-	//service.ResetDB()
 
 	// Ozzo-router
 	router := routing.New()
@@ -77,6 +67,7 @@ func main() {
 	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournamentController(c, service) })
 	router.Get(`/balance`, func(c *routing.Context) error { return playerBalanceController(c, service) })
 	router.Get(`/fund`, func(c *routing.Context) error { return fundController(c, service) })
+	router.Get(`/joinTournament`, func(c *routing.Context) error { return joinTournamentController(c, service) })
 	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
 	router.Get(`/take`, func(c *routing.Context) error { return takeController(c, service) })
 

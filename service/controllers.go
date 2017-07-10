@@ -139,3 +139,31 @@ func takeController(c *routing.Context, service Service) error {
 
 	return c.Write(map[string]string{})
 }
+
+func joinTournamentController(c *routing.Context, service Service) error {
+	backers := c.Request.URL.Query()["backerId"]
+	log.Println("aaa", backers)
+	playerId := c.Query("playerId")
+	id := c.Query("tournamentId")
+
+	if playerId == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "playerId is requred")
+	}
+
+	if id == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "tournamentId is requred")
+	}
+	tournamentId, err := strconv.ParseInt(id, 10, 64)
+
+	err = service.JoinTournament(tournamentId, playerId, backers)
+	if err != nil {
+		e := err.Error()
+		if e == "not found" {
+			return routing.NewHTTPError(http.StatusNotFound, e)
+		}
+		log.Println("joinTournament:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, e)
+	}
+
+	return c.Write(map[string]string{})
+}
