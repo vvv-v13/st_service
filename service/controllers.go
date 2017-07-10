@@ -73,33 +73,69 @@ func playerBalanceController(c *routing.Context, service Service) error {
 }
 
 func fundController(c *routing.Context, service Service) error {
-        id := c.Query("playerId")
-        p := c.Query("points")
+	id := c.Query("playerId")
+	p := c.Query("points")
 
-        if id == "" {
-                return routing.NewHTTPError(http.StatusBadRequest, "playerId is requred")
-        }
+	if id == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "playerId is requred")
+	}
 
-        if p == "" {
-                return routing.NewHTTPError(http.StatusBadRequest, "points is requred")
-        }
+	if p == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "points is requred")
+	}
 
-        points, err := strconv.ParseInt(p, 10, 64)
+	points, err := strconv.ParseInt(p, 10, 64)
 
-        if (err != nil) {
-                log.Println("Fund:", err)
-                return routing.NewHTTPError(http.StatusBadRequest, err.Error())
-        }
+	if err != nil {
+		log.Println("Fund:", err)
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
-        if points <=0 {
-                return routing.NewHTTPError(http.StatusBadRequest, "invalid points")
-        }
+	if points <= 0 {
+		return routing.NewHTTPError(http.StatusBadRequest, "invalid points")
+	}
 
-        err = service.Fund(id, points)
-        if err != nil {
-                log.Println("Fund:", err)
-                return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
-        }
+	err = service.Fund(id, points)
+	if err != nil {
+		log.Println("Fund:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.Write(map[string]string{})
+}
+
+func takeController(c *routing.Context, service Service) error {
+	id := c.Query("playerId")
+	p := c.Query("points")
+
+	if id == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "playerId is requred")
+	}
+
+	if p == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "points is requred")
+	}
+
+	points, err := strconv.ParseInt(p, 10, 64)
+
+	if err != nil {
+		log.Println("Fund:", err)
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if points <= 0 {
+		return routing.NewHTTPError(http.StatusBadRequest, "invalid points")
+	}
+
+	rows, err := service.Take(id, points)
+	if err != nil {
+		log.Println("Take:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if rows == 0 {
+		return routing.NewHTTPError(http.StatusNotFound, "not found")
+	}
 
 	return c.Write(map[string]string{})
 }

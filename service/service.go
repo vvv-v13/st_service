@@ -107,9 +107,30 @@ func (service *Service) Fund(player string, points int64) error {
 	return err
 }
 
-func (service *Service) Take(player string, points int64) error {
-	log.Println("Take:", player, points)
-	return nil
+const takeSQL = `
+        UPDATE players
+	SET balance = balance - {:points}
+	WHERE 
+		id = {:id}
+		AND balance >= {:points}
+`
+
+func (service *Service) Take(player string, points int64) (int64, error) {
+	q := service.db.NewQuery(takeSQL)
+	q.Bind(dbx.Params{
+		"id":     player,
+		"points": points,
+	})
+
+	result, err := q.Execute()
+	if err != nil {
+		log.Println("DB:", err)
+		return 0, err
+	}
+
+	r, err := result.RowsAffected()
+
+	return r, err
 }
 
 type Tournaments struct {

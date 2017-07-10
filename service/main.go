@@ -78,6 +78,7 @@ func main() {
 	router.Get(`/balance`, func(c *routing.Context) error { return playerBalanceController(c, service) })
 	router.Get(`/fund`, func(c *routing.Context) error { return fundController(c, service) })
 	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
+	router.Get(`/take`, func(c *routing.Context) error { return takeController(c, service) })
 
 	// Http server
 	server := &http.Server{
