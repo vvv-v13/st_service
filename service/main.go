@@ -40,17 +40,6 @@ func main() {
 	service := Service{db: db}
 	service.Initialize()
 
-	service.Fund("P1", 300)
-	service.Fund("P2", 300)
-	service.Fund("P3", 300)
-	service.Fund("P4", 500)
-	service.Fund("P5", 1000)
-
-	service.AnnounceTournament(1, 1000)
-
-	service.JoinTournament(1, "P1", []string{"P2", "P3", "P4"})
-	service.JoinTournament(1, "P5", []string{})
-
 	// Ozzo-router
 	router := routing.New()
 

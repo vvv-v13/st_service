@@ -5,6 +5,7 @@ import (
 	"github.com/go-ozzo/ozzo-dbx"
 	"github.com/lib/pq"
 	"log"
+	"strings"
 )
 
 type Service struct {
@@ -146,12 +147,12 @@ func (service *Service) Take(player string, points int64) (int64, error) {
 }
 
 type Tournaments struct {
-	ID       int64 `db:"id"`
-	Deposit  int64 `db:"deposit"`
-	Finished bool  `db:"finished"`
+	ID       string `db:"id"`
+	Deposit  int64  `db:"deposit"`
+	Finished bool   `db:"finished"`
 }
 
-func (service *Service) AnnounceTournament(id int64, deposit int64) error {
+func (service *Service) AnnounceTournament(id string, deposit int64) error {
 	tournament := Tournaments{
 		ID:       id,
 		Deposit:  deposit,
@@ -166,9 +167,7 @@ func (service *Service) AnnounceTournament(id int64, deposit int64) error {
 	return err
 }
 
-func (service *Service) JoinTournament(id int64, player string, backers []string) error {
-	log.Println("JoinTournament:", id, player, backers)
-
+func (service *Service) JoinTournament(id string, player string, backers []string) error {
 	var tournament Tournaments
 
 	service.db.Select("id", "deposit", "finished").
@@ -193,7 +192,7 @@ func (service *Service) JoinTournament(id int64, player string, backers []string
 	}).Execute()
 
 	if err != nil {
-		log.Println("vvv:", err)
+		log.Println(err)
 		tx.Rollback()
 		return err
 	}
@@ -226,8 +225,103 @@ func (service *Service) JoinTournament(id int64, player string, backers []string
 	return nil
 }
 
-func (service *Service) ResultTournament(results []Winner) error {
-	log.Println("ResultTournament:", results)
+const resultSQL = `
+    UPDATE tournaments
+    SET finished = 't'
+    WHERE id = {:id}
+`
+const prizeSQL = `
+    UPDATE players
+    SET balance = balance + {:points}
+    WHERE id = {:id}
+`
+
+const winnerSQL = `
+    SELECT 
+        id,
+        player_id,
+        backers
+    FROM games
+    WHERE
+         tournament_id = {:tournamentId}        
+         AND player_id = {:playerId}
+    LIMIT 1
+`
+
+type PlayerWinner struct {
+	ID       string `db:"id"`
+	PlayerID string `db:"player_id"`
+	Backers  string `db:"backers"`
+}
+
+func (service *Service) ResultTournament(id string, results []Winner) error {
+	tx, _ := service.db.Begin()
+	q := tx.NewQuery(resultSQL)
+	q.Bind(dbx.Params{
+		"id": id,
+	})
+
+	result, err := q.Execute()
+	if err != nil {
+		log.Println("DB:", err)
+		tx.Rollback()
+		return err
+	}
+
+	r, err := result.RowsAffected()
+	if r == 0 {
+		tx.Rollback()
+		return errors.New("not found")
+	}
+
+	for _, winner := range results {
+		q = tx.NewQuery(winnerSQL)
+		q.Bind(dbx.Params{
+			"tournamentId": id,
+			"playerId":     winner.PlayerId,
+		})
+		var playerWinner PlayerWinner
+		err = q.One(&playerWinner)
+		if err != nil {
+			tx.Rollback()
+			e := err.Error()
+			if e == "sql: no rows in result set" {
+				return errors.New("not found")
+			}
+			log.Println("DB:", err)
+			return err
+		}
+
+		pr := strings.Trim(playerWinner.Backers, "{}")
+		players := strings.Split(pr, ",")
+		players = append(players, winner.PlayerId)
+		playersLen := len(players)
+
+		points := winner.Prize / int64(playersLen)
+
+		for _, p := range players {
+			q := tx.NewQuery(prizeSQL)
+			q.Bind(dbx.Params{
+				"id":     p,
+				"points": points,
+			})
+
+			result, err := q.Execute()
+			if err != nil {
+				log.Println("DB:", err)
+				tx.Rollback()
+				return err
+			}
+
+			r, err := result.RowsAffected()
+			if r == 0 {
+				tx.Rollback()
+				return errors.New("not found")
+			}
+		}
+	}
+
+	tx.Commit()
 	return nil
 }
 

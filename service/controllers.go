@@ -8,22 +8,15 @@ import (
 )
 
 func announceTournamentController(c *routing.Context, service Service) error {
-	id := c.Query("tournamentId")
+	tournament := c.Query("tournamentId")
 	d := c.Query("deposit")
 
-	if id == "" {
+	if tournament == "" {
 		return routing.NewHTTPError(http.StatusBadRequest, "tournamentId is requred")
 	}
 
 	if d == "" {
 		return routing.NewHTTPError(http.StatusBadRequest, "deposit is requred")
-	}
-
-	tournament, err := strconv.ParseInt(id, 10, 64)
-
-	if err != nil {
-		log.Println("AnnounceTournament:", err)
-		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	deposit, err := strconv.ParseInt(d, 10, 64)
@@ -143,18 +136,17 @@ func takeController(c *routing.Context, service Service) error {
 func joinTournamentController(c *routing.Context, service Service) error {
 	backers := c.Request.URL.Query()["backerId"]
 	playerId := c.Query("playerId")
-	id := c.Query("tournamentId")
+	tournamentId := c.Query("tournamentId")
 
 	if playerId == "" {
 		return routing.NewHTTPError(http.StatusBadRequest, "playerId is requred")
 	}
 
-	if id == "" {
+	if tournamentId == "" {
 		return routing.NewHTTPError(http.StatusBadRequest, "tournamentId is requred")
 	}
-	tournamentId, err := strconv.ParseInt(id, 10, 64)
 
-	err = service.JoinTournament(tournamentId, playerId, backers)
+	err := service.JoinTournament(tournamentId, playerId, backers)
 	if err != nil {
 		e := err.Error()
 		if e == "not found" {
@@ -168,12 +160,13 @@ func joinTournamentController(c *routing.Context, service Service) error {
 }
 
 type Winner struct {
-	Player string `json:"playerId"`
-	Prize  int64  `json:"prize"`
+	PlayerId string `json:"playerId"`
+	Prize    int64  `json:"prize"`
 }
 
 type Results struct {
-	Winners []Winner `json:"winners"`
+	Winners      []Winner `json:"winners"`
+	TournamentId string   `json:"tournamentId"`
 }
 
 func resultTournamentController(c *routing.Context, service Service) error {
@@ -188,7 +181,12 @@ func resultTournamentController(c *routing.Context, service Service) error {
 		return routing.NewHTTPError(http.StatusBadRequest, "bad request, empty winners")
 	}
 
-	err := service.ResultTournament(postData.Winners)
+	tournamentId := postData.TournamentId
+	if tournamentId == "" {
+		return routing.NewHTTPError(http.StatusBadRequest, "bad request, empty tournamentId")
+	}
+
+	err := service.ResultTournament(tournamentId, postData.Winners)
 	if err != nil {
 		e := err.Error()
 		if e == "not found" {
