@@ -54,6 +54,7 @@ func (service *Service) CreatePlayersTable() error {
 const gamesIndexesSQL = `
     CREATE UNIQUE INDEX ON games USING btree(tournament_id, player_id)
 `
+
 func (service *Service) CreateTournamentsTables() error {
 	log.Println("Create tournaments tables")
 
@@ -81,12 +82,12 @@ func (service *Service) CreateTournamentsTables() error {
 		log.Println("DB:", err)
 		//return err
 	} else {
-            q = service.db.NewQuery(gamesIndexesSQL)
-            _, err := q.Execute()
-            if err != nil {
-                log.Println("DB:", err)
-            }
-        }
+		q = service.db.NewQuery(gamesIndexesSQL)
+		_, err := q.Execute()
+		if err != nil {
+			log.Println("DB:", err)
+		}
+	}
 
 	return err
 }
@@ -225,8 +226,8 @@ func (service *Service) JoinTournament(id int64, player string, backers []string
 	return nil
 }
 
-func (service *Service) ResultTournament(result string) error {
-	log.Println("ResultTournament:", result)
+func (service *Service) ResultTournament(results []Winner) error {
+	log.Println("ResultTournament:", results)
 	return nil
 }
 

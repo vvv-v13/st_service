@@ -50,7 +50,6 @@ func main() {
 
 	service.JoinTournament(1, "P1", []string{"P2", "P3", "P4"})
 	service.JoinTournament(1, "P5", []string{})
-	service.ResultTournament("HZ")
 
 	// Ozzo-router
 	router := routing.New()
@@ -69,6 +68,7 @@ func main() {
 	router.Get(`/fund`, func(c *routing.Context) error { return fundController(c, service) })
 	router.Get(`/joinTournament`, func(c *routing.Context) error { return joinTournamentController(c, service) })
 	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
+	router.Post(`/resultTournament`, func(c *routing.Context) error { return resultTournamentController(c, service) })
 	router.Get(`/take`, func(c *routing.Context) error { return takeController(c, service) })
 
 	// Http server

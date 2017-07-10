@@ -160,7 +160,41 @@ func joinTournamentController(c *routing.Context, service Service) error {
 		if e == "not found" {
 			return routing.NewHTTPError(http.StatusNotFound, e)
 		}
-		log.Println("joinTournament:", err)
+		log.Println("joinTournamentController:", err)
+		return routing.NewHTTPError(http.StatusInternalServerError, e)
+	}
+
+	return c.Write(map[string]string{})
+}
+
+type Winner struct {
+	Player string `json:"playerId"`
+	Prize  int64  `json:"prize"`
+}
+
+type Results struct {
+	Winners []Winner `json:"winners"`
+}
+
+func resultTournamentController(c *routing.Context, service Service) error {
+	var postData Results
+
+	if err := c.Read(&postData); err != nil {
+		log.Println("resultTournamentController:", err)
+		return routing.NewHTTPError(http.StatusBadRequest, "bad request")
+	}
+
+	if len(postData.Winners) == 0 {
+		return routing.NewHTTPError(http.StatusBadRequest, "bad request, empty winners")
+	}
+
+	err := service.ResultTournament(postData.Winners)
+	if err != nil {
+		e := err.Error()
+		if e == "not found" {
+			return routing.NewHTTPError(http.StatusNotFound, e)
+		}
+		log.Println("resultTournamentController:", err)
 		return routing.NewHTTPError(http.StatusInternalServerError, e)
 	}
 
