@@ -14,7 +14,7 @@ services:
             - "5432:5432"
 
     app:
-        image: vetal13/st_service
+        build: ./service
         depends_on:
             sql-db: { condition: service_healthy }
         links: 

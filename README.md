@@ -5,3 +5,6 @@
 
 ### Run
     docker-compose up --build
+
+### Run for Develop 
+    docker-compose -f docker-compose-dev.yml up
