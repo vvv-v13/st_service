@@ -10,5 +10,4 @@ WORKDIR /go/src/app
 
 RUN go build -o stservice .
 
-RUN go build -o main . 
 CMD ["/go/src/app/stservice"]

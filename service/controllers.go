@@ -65,9 +65,9 @@ func playerBalanceController(c *routing.Context, service Service) error {
 	player, err := service.PlayerBalance(id)
 	if err != nil {
 		e := err.Error()
-		// If no player id db set status 404
+		// If no player id db set status 400
 		if e == "sql: no rows in result set" {
-			return routing.NewHTTPError(http.StatusNotFound, "not found")
+			return routing.NewHTTPError(http.StatusBadRequest, "playerId not found")
 		}
 		// For other errors set default status 500
 		log.Println("PlayerBalanceDB:", err)
@@ -154,9 +154,9 @@ func takeController(c *routing.Context, service Service) error {
 		return routing.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// If no rows updated set status 404, (playerId doesn't exist in database)
+	// If no rows updated set status 400, (playerId doesn't exist in database)
 	if rows == 0 {
-		return routing.NewHTTPError(http.StatusNotFound, "not found")
+		return routing.NewHTTPError(http.StatusBadRequest, "playerId not found")
 	}
 
 	// If no errors response 200 with empty JSON Object
@@ -185,9 +185,9 @@ func joinTournamentController(c *routing.Context, service Service) error {
 	err := service.JoinTournament(tournamentId, playerId, backers)
 	if err != nil {
 		e := err.Error()
-		// If no rows updated set status 404, (playerId or tournamentId  doesn't exist in database)
+		// If no rows updated set status 400, (playerId or tournamentId  doesn't exist in database)
 		if e == "not found" {
-			return routing.NewHTTPError(http.StatusNotFound, e)
+			return routing.NewHTTPError(http.StatusBadRequest, e)
 		}
 		// Response for other errors (set status 500)
 		log.Println("joinTournamentController:", err)
@@ -235,9 +235,9 @@ func resultTournamentController(c *routing.Context, service Service) error {
 	err := service.ResultTournament(tournamentId, postData.Winners)
 	if err != nil {
 		e := err.Error()
-		// If no rows updated set status 404, (playerId or tournamentId or any backerId doesn't exist in database)
+		// If no rows updated set status 400, (playerId or tournamentId or any backerId doesn't exist in database)
 		if e == "not found" {
-			return routing.NewHTTPError(http.StatusNotFound, e)
+			return routing.NewHTTPError(http.StatusBadRequest, e)
 		}
 		// Response for other errors (set status 500)
 		log.Println("resultTournamentController:", err)
