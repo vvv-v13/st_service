@@ -16,17 +16,48 @@ import (
 	"time"
 )
 
+func initDatabase() *dbx.DB {
+        dsn := os.Getenv("SQL_DB")
+
+        // PostgreSQL
+        db, err := dbx.MustOpen("postgres", dsn)
+        if err != nil {
+                log.Fatal(err)
+                log.Println("Connection to DB failed, aborting...")
+        }
+	return db
+}
+
+func initRouter(db *dbx.DB) *routing.Router {
+
+        // Social Tournament Service
+        service := Service{db: db}
+        service.Initialize()
+
+        // Ozzo-router
+        router := routing.New()
+
+        // Middlewares
+        router.Use(
+                access.Logger(log.Printf),
+                slash.Remover(http.StatusMovedPermanently),
+                content.TypeNegotiator(content.JSON),
+                fault.Recovery(log.Printf),
+        )
+
+        // API endpoints
+        router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournamentController(c, service) })
+        router.Get(`/balance`, func(c *routing.Context) error { return playerBalanceController(c, service) })
+        router.Get(`/fund`, func(c *routing.Context) error { return fundController(c, service) })
+        router.Get(`/joinTournament`, func(c *routing.Context) error { return joinTournamentController(c, service) })
+        router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
+        router.Post(`/resultTournament`, func(c *routing.Context) error { return resultTournamentController(c, service) })
+        router.Get(`/take`, func(c *routing.Context) error { return takeController(c, service) })
+
+	return router
+}
+
 func main() {
-
-	dsn := os.Getenv("SQL_DB")
-
-	// PostgreSQL
-	db, err := dbx.MustOpen("postgres", dsn)
-	if err != nil {
-		log.Fatal(err)
-		log.Println("Connection to DB failed, aborting...")
-	}
-	defer db.Close()
 
 	// Exit with return code 0 on kill.
 	done := make(chan os.Signal, 1)
@@ -36,29 +67,6 @@ func main() {
 		os.Exit(0)
 	}()
 
-	// Social Tournament Service
-	service := Service{db: db}
-	service.Initialize()
-
-	// Ozzo-router
-	router := routing.New()
-
-	// Middlewares
-	router.Use(
-		access.Logger(log.Printf),
-		slash.Remover(http.StatusMovedPermanently),
-		content.TypeNegotiator(content.JSON),
-		fault.Recovery(log.Printf),
-	)
-
-	// API endpoints
-	router.Get(`/announceTournament`, func(c *routing.Context) error { return announceTournamentController(c, service) })
-	router.Get(`/balance`, func(c *routing.Context) error { return playerBalanceController(c, service) })
-	router.Get(`/fund`, func(c *routing.Context) error { return fundController(c, service) })
-	router.Get(`/joinTournament`, func(c *routing.Context) error { return joinTournamentController(c, service) })
-	router.Get(`/reset`, func(c *routing.Context) error { return resetDBController(c, service) })
-	router.Post(`/resultTournament`, func(c *routing.Context) error { return resultTournamentController(c, service) })
-	router.Get(`/take`, func(c *routing.Context) error { return takeController(c, service) })
 
 	// Http server
 	server := &http.Server{
@@ -69,7 +77,11 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
+        db := initDatabase()
+        defer db.Close()
+
 	// Router
+	router := initRouter(db)
 	http.Handle("/", router)
 
 	// Start HTTP server

@@ -4,9 +4,10 @@ RUN go get github.com/go-ozzo/ozzo-dbx
 RUN go get github.com/go-ozzo/ozzo-routing 
 RUN go get github.com/golang/gddo/httputil/header
 RUN go get github.com/lib/pq 
+RUN go get github.com/stretchr/testify/assert
 
 ADD . /go/src/app
 WORKDIR /go/src/app 
 
 
-CMD ["go", "test", "-tags", "integration"]
+CMD ["go", "test", "-v"]
